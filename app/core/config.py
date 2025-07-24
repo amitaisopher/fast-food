@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field
-from typing import Optional, Union, Literal
+from typing import Literal
 
 EnvironmentType = Literal["development", "production", "testing"]
 
