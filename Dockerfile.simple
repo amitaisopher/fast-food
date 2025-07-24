@@ -1,0 +1,39 @@
+# Simple single-stage Dockerfile using UV
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    UV_CACHE_DIR=/tmp/uv-cache
+
+# Set work directory
+WORKDIR /app
+
+# Create a non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Copy UV configuration files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies using UV
+RUN --mount=type=cache,target=/tmp/uv-cache \
+    uv sync --frozen --no-dev
+
+# Copy application code
+COPY . .
+
+# Change ownership of the application directory
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose the port that FastAPI runs on
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/health', timeout=10)" || exit 1
+
+# Command to run the application
+CMD ["uv", "run", "python", "main.py"]

@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  fastapi-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+    volumes:
+      # Mount .env file if it exists
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=10)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development service (optional)
+  fastapi-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    ports:
+      - "8001:8000"
+    environment:
+      - ENVIRONMENT=development
+    volumes:
+      - .:/app
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    profiles:
+      - dev
