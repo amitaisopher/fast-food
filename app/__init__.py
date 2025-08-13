@@ -45,12 +45,12 @@ def create_app() -> FastAPI:
             # Capture the exception in Sentry before handling it
             sentry_sdk.capture_exception(exc)
 
-        uvicorn_logger.error(
-            f"Unhandled exception occurred: {type(exc).__name__}: {str(exc)}\n"
-            f"Request URL: {request.url}\n"
-            f"Request method: {request.method}\n"
-            f"Traceback:\n{traceback.format_exc()}"
-        )
+        uvicorn_logger.error("\n".join([
+            f"Unhandled exception occurred: {type(exc).__name__}: {str(exc)}",
+            f"Request URL: {request.url}",
+            f"Request method: {request.method}",
+            f"Traceback:\n{traceback.format_exc()}",
+        ]))
         return JSONResponse(
             status_code=500,
             content={
@@ -74,11 +74,11 @@ def create_app() -> FastAPI:
                 })
             sentry_sdk.capture_exception(exc)
 
-        uvicorn_logger.warning(
-            f"HTTP exception: {exc.status_code} - {exc.detail}\n"
-            f"Request URL: {request.url}\n"
-            f"Request method: {request.method}"
-        )
+        uvicorn_logger.warning("\n".join([
+            f"HTTP exception: {exc.status_code} - {exc.detail}",
+            f"Request URL: {request.url}",
+            f"Request method: {request.method}",
+        ]))
         return JSONResponse(
             status_code=exc.status_code,
             content={
@@ -93,11 +93,11 @@ def create_app() -> FastAPI:
     async def validation_exception_handler(
         request: Request, exc: RequestValidationError
     ):
-        uvicorn_logger.warning(
-            f"Validation error: {str(exc)}\n"
-            f"Request URL: {request.url}\n"
-            f"Request method: {request.method}"
-        )
+        uvicorn_logger.warning("\n".join([
+            f"Validation error: {str(exc)}",
+            f"Request URL: {request.url}",
+            f"Request method: {request.method}",
+        ]))
         return JSONResponse(
             status_code=422,
             content={
