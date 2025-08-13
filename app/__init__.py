@@ -111,7 +111,7 @@ def create_app() -> FastAPI:
     # Health check endpoint
     @app.get("/health")
     async def health_check():
-        # Remove the test error and return proper health check
+        # Return service health status
         return {"status": "healthy", "service": "fast-food-api"}
 
     @app.get("/test-error")
