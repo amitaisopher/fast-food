@@ -9,7 +9,7 @@ from sentry_sdk.integrations.fastapi import FastApiIntegration
 
 def setup_sentry_logging() -> None:
     """
-    Setup logging configuration for the application.
+    Set up logging configuration for the application.
     """
     sentry_logger = LoggingIntegration(
         level=logging.INFO,  # Capture info and above as breadcrumbs
