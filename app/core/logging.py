@@ -1,11 +1,14 @@
 import sys
 import logging
 from loguru import logger
-from app.core.config import settings
+import loguru
+from app.core.config import get_settings, EnvironmentType
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 
+
+settings = get_settings()
 
 def setup_sentry_logging() -> None:
     """
@@ -38,12 +41,11 @@ def is_sentry_enabled() -> bool:
     return settings.sentry_enabled and bool(settings.sentry_dsn)
 
 
-ENV = settings.environment
 logger.remove()  # Remove default logger
 
-if ENV == "development":
+if settings.environment == EnvironmentType.DEVELOPMENT:
     logger.add(sys.stdout)
-elif ENV == "production":
+elif settings.environment == EnvironmentType.PRODUCTION:
     logger.add(sys.stdout, serialize=True)
 
 
@@ -67,3 +69,29 @@ class InterceptHandler(logging.Handler):
         logger.opt(depth=depth, exception=record.exc_info).log(
             level, record.getMessage()
         )
+
+
+def setup_logging():
+    """
+    Set up logging for use throughout the application.
+    """
+    logger.remove()
+    logger.add(
+        sys.stdout,
+        level="INFO",
+        colorize=True,
+    )
+
+
+_logger = None
+
+def get_application_logger() -> "loguru.Logger":
+    """
+    Get a loguru logger instance for the application.
+    """
+    global _logger
+    if _logger is not None:
+        return _logger
+    setup_logging()
+    _logger = logger
+    return _logger
