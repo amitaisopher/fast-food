@@ -148,6 +148,7 @@ dependencies = [
     { name = "requests" },
     { name = "sentry-sdk", extra = ["fastapi"] },
     { name = "uvicorn" },
+    { name = "uvloop" },
 ]
 
 [package.metadata]
@@ -159,6 +160,7 @@ requires-dist = [
     { name = "requests", specifier = ">=2.31.0" },
     { name = "sentry-sdk", extras = ["fastapi"], specifier = ">=2.33.2" },
     { name = "uvicorn", specifier = ">=0.35.0" },
+    { name = "uvloop", specifier = ">=0.21.0" },
 ]
 
 [[package]]

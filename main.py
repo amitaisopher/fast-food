@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from app import create_app
-from app.core.config import settings
+from app.core.config import get_settings, EnvironmentType
 
-is_dev_environment: bool = settings.environment == "development"
+settings = get_settings()
+is_dev_environment: bool = settings.environment == EnvironmentType.DEVELOPMENT
 
 # Create app instance at module level for uvicorn import string
 app: FastAPI = create_app()
@@ -10,6 +11,12 @@ app: FastAPI = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+    import asyncio
+    import uvloop
+    
+    # Replace asyncio default event loop with uvloop for increased performance.
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    
     if is_dev_environment:
         # Use import string for reload to work properly
         uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_config=None)
