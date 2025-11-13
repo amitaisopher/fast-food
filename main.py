@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app import create_app
+from app.create_app import create_app
 from app.core.config import get_settings, EnvironmentType
 
 settings = get_settings()
