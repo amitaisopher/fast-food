@@ -3,21 +3,60 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.logging import InterceptHandler, setup_sentry_logging, is_sentry_enabled, get_application_logger
+from app.core.config import get_settings
 import logging
 import traceback
 from logging import Logger
 import sentry_sdk
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
+from redis import asyncio as aioredis
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan event handler for FastAPI application.
+    Handles startup and shutdown events.
+    """
+    # Startup: Initialize FastAPI Limiter
+    settings = get_settings()
+    logger = get_application_logger()
+    redis = None
+    
+    try:
+        redis = aioredis.from_url(
+            settings.redis_url, 
+            encoding="utf-8", 
+            decode_responses=True
+        )
+        await FastAPILimiter.init(redis)
+        logger.info("FastAPI Limiter initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize FastAPI Limiter: {e}")
+        # You can choose to raise the exception or continue without rate limiting
+        # raise
+    
+    yield  # Application is running
+    
+    # Shutdown: Cleanup resources (if needed)
+    if redis is not None:
+        await redis.aclose()
+        logger.info("Redis connection closed")
+    logger.info("Application shutting down")
 
 
 def create_app() -> FastAPI:
 
+    settings = get_settings()
     # Initialize Sentry logging prior to app creation
     # This ensures that any errors during app creation are captured by Sentry
     # and that the logging configuration is set up correctly.
     # This is particularly useful for capturing errors in the app startup phase.
     setup_sentry_logging()
 
-    app = FastAPI(title="My API", version="1.0.0")
+    app = FastAPI(title="My API", version="1.0.0", lifespan=lifespan)
     uvicorn_logger: Logger = logging.getLogger("app")
 
     # Removing uvicorn default logger

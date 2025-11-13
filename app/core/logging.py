@@ -2,7 +2,7 @@ import sys
 import logging
 from loguru import logger
 import loguru
-from app.core.config import get_settings, EnvironmentType
+from app.core.config import get_settings, Environment
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.fastapi import FastApiIntegration
@@ -43,9 +43,9 @@ def is_sentry_enabled() -> bool:
 
 logger.remove()  # Remove default logger
 
-if settings.environment == EnvironmentType.DEVELOPMENT:
+if settings.environment == Environment.DEVELOPMENT:
     logger.add(sys.stdout)
-elif settings.environment == EnvironmentType.PRODUCTION:
+elif settings.environment == Environment.PRODUCTION:
     logger.add(sys.stdout, serialize=True)
 
 

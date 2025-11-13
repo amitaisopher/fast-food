@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: fastapi-app-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+    env_file:
+      - .env.development
+    volumes:
+      - .:/app
+      - /app/.venv  # Exclude .venv from volume mount
+    depends_on:
+      - redis
+    networks:
+      - fastapi-network
+    restart: unless-stopped
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - fastapi-network
+    restart: unless-stopped
+    command: redis-server /usr/local/etc/redis/redis.conf
+    
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander-dev
+    hostname: redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - fastapi-network
+    restart: unless-stopped
+
+volumes:
+  redis_data_dev:
+
+networks:
+  fastapi-network:
+    driver: bridge
