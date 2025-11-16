@@ -6,9 +6,21 @@ from app.core.config import get_settings, Environment
 import sentry_sdk
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.fastapi import FastApiIntegration
+from enum import StrEnum
 
 
 settings = get_settings()
+
+
+class LogLevels(StrEnum):
+    """Enum for log levels."""
+
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
+
 
 def setup_sentry_logging() -> None:
     """
@@ -16,7 +28,7 @@ def setup_sentry_logging() -> None:
     """
     sentry_logger = LoggingIntegration(
         level=logging.INFO,  # Capture info and above as breadcrumbs
-        event_level=logging.ERROR  # Send errors as events to Sentry
+        event_level=logging.ERROR,  # Send errors as events to Sentry
     )
 
     # Configure Sentry for error tracking
@@ -76,6 +88,19 @@ def setup_logging():
     Set up logging for use throughout the application.
     """
     logger.remove()
+    # Set log level from settings
+    log_level = settings.log_level.upper()
+    if log_level not in LogLevels.__members__:
+        log_level = LogLevels.INFO.value
+    # Optionally log to file
+    if settings.log_to_file:
+        logger.add(
+            settings.log_file_path,
+            level=log_level,
+            rotation="10 MB",  # Rotate after 10 MB
+            retention="10 days",  # Keep logs for 10 days
+            compression="zip",  # Compress rotated logs
+        )
     logger.add(
         sys.stdout,
         level="INFO",
@@ -84,6 +109,7 @@ def setup_logging():
 
 
 _logger = None
+
 
 def get_application_logger() -> "loguru.Logger":
     """

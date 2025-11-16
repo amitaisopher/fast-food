@@ -27,7 +27,9 @@ class Settings(BaseSettings):
     def __init__(self, **data):
         super().__init__(**data)
 
-    environment: Environment = Field(default=Environment.DEVELOPMENT,)
+    environment: Environment = Field(
+        default=Environment.DEVELOPMENT,
+    )
     sentry_dsn: str | None = Field(default=None, alias="SENTRY_DSN")
     sentry_enabled: bool = Field(default=False, alias="SENTRY_ENABLED")
 
@@ -35,6 +37,11 @@ class Settings(BaseSettings):
     redis_host: str = Field(default="localhost", alias="REDIS_HOST")
     redis_port: int = Field(default=6379, alias="REDIS_PORT")
     redis_password: str | None = Field(default=None, alias="REDIS_PASSWORD")
+
+    # Logging configuration
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    log_to_file: bool = Field(default=False, alias="LOG_TO_FILE")
+    log_file_path: str = Field(default="./logs/app.log", alias="LOG_FILE_PATH")
 
     @field_validator("redis_port", mode="before")
     @classmethod
@@ -50,7 +57,6 @@ class Settings(BaseSettings):
             except ValueError:
                 return 6379  # Return default value if conversion fails
         return 6379
-    
 
     @property
     def redis_url(self) -> str:
