@@ -16,6 +16,9 @@ dependencies = [
     "uvicorn>=0.35.0",
     "uvloop>=0.21.0",
     "slowapi>=0.1.9",
+    "sqlalchemy>=2.0.45",
+    "aiosqlite>=0.22.1",
+    "greenlet>=3.3.0",
 ]
 
 [tool]

@@ -8,6 +8,7 @@ from app.core.logging import (
     is_sentry_enabled,
     get_application_logger,
 )
+from app.db.database import engine, AsyncSessionLocal, get_db, Base
 from app.core.config import get_settings
 from app.core.rate_limiter import limiter
 from slowapi.errors import RateLimitExceeded
@@ -27,7 +28,13 @@ async def lifespan(app: FastAPI):
     Lifespan event handler for FastAPI application.
     Handles startup and shutdown events.
     """
-    # Startup: Initialize FastAPI Limiter
+
+    # Startup tasks
+    # Initialize database connection pool, cache, etc.
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    # Initialize FastAPI Limiter
     settings = get_settings()
     logger = get_application_logger()
     redis = None
@@ -45,7 +52,11 @@ async def lifespan(app: FastAPI):
 
     yield  # Application is running
 
-    # Shutdown: Cleanup resources (if needed)
+    # Shutdown tasks
+    # Close database connections, cleanup, etc.
+    await engine.dispose()
+    
+    # Cleanup resources (if needed)
     if redis is not None:
         await redis.aclose()
         logger.info("Redis connection closed")
