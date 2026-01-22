@@ -1,16 +1,21 @@
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from app.core.config import get_settings
 from typing import AsyncGenerator
 
-settings = get_settings()
+from sqlalchemy.engine.url import make_url
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
-engine = create_async_engine(
-    settings.database_url,
-    connect_args={
+from app.core.config import get_settings
+
+settings = get_settings()
+database_url = make_url(settings.database_url)
+
+engine_kwargs = {}
+if database_url.get_backend_name() == "sqlite":
+    engine_kwargs["connect_args"] = {
         "check_same_thread": False  # Needed for SQLite to allow usage in multiple threads
-    },
-)
+    }
+
+engine = create_async_engine(settings.database_url, **engine_kwargs)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
