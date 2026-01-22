@@ -16,6 +16,7 @@ A comprehensive boilerplate for FastAPI applications with modern Python tooling,
 - **Error Tracking**: Optional Sentry integration for production error monitoring
 - **Health Checks**: Built-in health monitoring and debug endpoints
 - **Global Exception Handlers**: Standardized error responses across the application
+- **Async Database Integration**: SQLAlchemy async engine and sessions for non-blocking DB access
 
 ## 📁 Project Structure
 
@@ -37,9 +38,7 @@ fast-food/
 │   ├── crud/                    # CRUD operations
 │   ├── db/                      # Database layer
 │   │   ├── __init__.py
-│   │   ├── base.py             # Base database model
-│   │   ├── init_db.py          # Database initialization
-│   │   └── session.py          # Database session management
+│   │   └── database.py         # Async engine + session factory
 │   ├── models/                  # Database models (SQLAlchemy, etc.)
 │   ├── schemas/                 # Pydantic schemas for request/response
 │   ├── services/                # Business logic layer
@@ -198,8 +197,12 @@ SENTRY_ENABLED=false              # Set to true to enable Sentry error tracking
 SENTRY_DSN="https://<your-sentry-dsn>"  # Your Sentry DSN (required if SENTRY_ENABLED=true)
 LOG_LEVEL=info
 
-# Database Configuration (if needed)
-# DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+# Database Configuration
+# Async SQLAlchemy expects an async driver (e.g., aiosqlite, asyncpg)
+# DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/dbname
+
+# SQLite example (local dev)
+DATABASE_URL="sqlite+aiosqlite:///./test.db"
 
 # Security Configuration (if needed)
 # SECRET_KEY=your-secret-key-here
@@ -229,6 +232,20 @@ The application replaces the default asyncio event loop with uvloop for signific
 - Custom log format for development and JSON serialization for production
 - Intercepts uvicorn logs and redirects them through Loguru
 - Singleton pattern application logger accessible via `get_application_logger()`
+
+#### 6. Async Database Integration
+The database layer uses SQLAlchemy's async engine and session factory so API handlers can interact with the database without blocking the event loop. The engine is created in `app/db/database.py` and initialized on startup in `app/create_app.py`, where tables are created with `Base.metadata.create_all`.
+
+Example usage inside a route or service:
+```python
+from sqlalchemy import text
+from app.db.database import get_db
+
+async def example_query():
+    async for session in get_db():
+        result = await session.execute(text("SELECT 1"))
+        return result.scalar_one()
+```
 
 ### Development vs Production
 

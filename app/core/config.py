@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     log_to_file: bool = Field(default=False, alias="LOG_TO_FILE")
     log_file_path: str = Field(default="./logs/app.log", alias="LOG_FILE_PATH")
 
+    # SQLAlchemy settings
+    database_url: str = Field(..., alias="DATABASE_URL")
+
     @field_validator("redis_port", mode="before")
     @classmethod
     def validate_redis_port(cls, v: Any) -> int:
